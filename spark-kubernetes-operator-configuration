@@ -1,0 +1,74 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: spark-kubernetes-operator-configuration
+  namespace: dev-spark-operator
+  uid: 3a702d13-0fe7-495d-b5b7-1ab5ba3a0cd2
+  resourceVersion: '372919424'
+  creationTimestamp: '2025-08-06T10:32:36Z'
+  labels:
+    app.kubernetes.io/component: operator-config
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: spark-kubernetes-operator
+    app.kubernetes.io/version: 0.5.0-SNAPSHOT
+    helm.sh/chart: spark-kubernetes-operator-1.3.0-dev
+    spark-role: operator
+  annotations:
+    meta.helm.sh/release-name: spark-operator
+    meta.helm.sh/release-namespace: dev-spark-operator
+  managedFields:
+    - manager: helm
+      operation: Update
+      apiVersion: v1
+      time: '2025-08-06T10:32:36Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          .: {}
+          'f:log4j2.properties': {}
+          'f:metrics.properties': {}
+        'f:metadata':
+          'f:annotations':
+            .: {}
+            'f:meta.helm.sh/release-name': {}
+            'f:meta.helm.sh/release-namespace': {}
+          'f:labels':
+            .: {}
+            'f:app.kubernetes.io/component': {}
+            'f:app.kubernetes.io/managed-by': {}
+            'f:app.kubernetes.io/name': {}
+            'f:app.kubernetes.io/version': {}
+            'f:helm.sh/chart': {}
+            'f:spark-role': {}
+    - manager: kubectl-edit
+      operation: Update
+      apiVersion: v1
+      time: '2025-08-06T10:34:15Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          'f:spark-operator.properties': {}
+data:
+  log4j2.properties: |+
+
+    # Logging Overrides
+    rootLogger.level=INFO
+    rootLogger.appenderRef.stdout.ref = console
+    appender.console.type = Console
+    appender.console.name = console
+    appender.console.target = SYSTEM_ERR
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yy/MM/dd HH:mm:ss} %p %X{resource.name} %X{resource.namespace} %C{1.} %m%n%ex
+
+  metrics.properties: |
+    # Metrics Properties Overrides
+  spark-operator.properties: |+
+    # Runtime resolved properties
+    spark.kubernetes.operator.namespace=dev-spark-operator
+    spark.kubernetes.operator.name=spark-kubernetes-operator
+    spark.kubernetes.operator.dynamicConfig.enabled=false
+    spark.kubernetes.operator.watchedNamespaces=dev-spark
+
+    # Property Overrides. e.g.
+    # spark.kubernetes.operator.reconciler.intervalSeconds=60
+
