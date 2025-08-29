@@ -1,0 +1,142 @@
+[epayuser@bastion improved]$ cat spark-config-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ops-service-0-spark-drv-conf-map
+  namespace: dev-spark
+  labels:
+    app: spark-operator
+data:
+  spark.kubernetes.namespace: spark
+  spark.properties: |
+    #Java properties built from Kubernetes config map with name: spark-drv-38866d9861067d78-conf-map
+    #Thu Jul 31 15:07:52 UTC 2025
+    spark.kubernetes.container.image.pullPolicy=Always
+    spark.driver.port=7078
+    spark.submit.pyFiles=
+    spark.kubernetes.resource.type=java
+    spark.kubernetes.namespace=spark
+    spark.executor.instances=2
+    spark.kubernetes.executor.container.image=registry.dev.sbiepay.sbi:8443/spark/spark:01082025v4
+    spark.kubernetes.driver.label.sparkoperator.k8s.io/app-name=spark-pi
+    spark.executor.memory=512m
+    spark.driver.memory=512m
+    spark.driver.cores=1
+    spark.kubernetes.driver.container.image=registry.dev.sbiepay.sbi:8443/spark/spark:01082025v4
+    spark.kubernetes.driver.limit.cores=1200m
+    spark.kubernetes.driver.label.version=4.0.0
+    spark.executor.cores=1
+    spark.kubernetes.submission.waitAppCompletion=false
+    spark.app.name=spark-pi
+    spark.submit.deployMode=cluster
+    spark.kubernetes.container.image=registry.dev.sbiepay.sbi:8443/spark/spark:01082025v4
+    spark.kubernetes.memoryOverheadFactor=0.1
+    spark.jars=local:///opt/spark/jars/SparkDemo-0.1.jar
+  spark.kubernetes.driver.pod.name: "ops-service-0-driver"
+  log4j2.properties: |
+    # Spark Log4j2 Configuration
+    status = warn
+    name = SparkLog4j2
+
+    appender.console.type = Console
+    appender.console.name = console
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+
+    appender.file.type = File
+    appender.file.name = file
+    appender.file.fileName = /opt/spark/logs/spark.log
+    appender.file.layout.type = PatternLayout
+    appender.file.layout.pattern = %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+
+    appender.rolling.type = RollingFile
+    appender.rolling.name = rolling
+    appender.rolling.fileName = /opt/spark/logs/spark-rolling.log
+    appender.rolling.filePattern = /opt/spark/logs/spark-rolling-%d{yyyy-MM-dd}-%i.log.gz
+    appender.rolling.layout.type = PatternLayout
+    appender.rolling.layout.pattern = %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+    appender.rolling.policies.type = Policies
+    appender.rolling.policies.time.type = TimeBasedTriggeringPolicy
+    appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+    appender.rolling.policies.size.size = 100MB
+    appender.rolling.strategy.type = DefaultRolloverStrategy
+    appender.rolling.strategy.max = 10
+
+    # Root logger
+    rootLogger.level = info
+    rootLogger.appenderRef.console.ref = console
+    rootLogger.appenderRef.rolling.ref = rolling
+
+    # Spark specific loggers
+    logger.spark.name = org.apache.spark
+    logger.spark.level = info
+
+    logger.spark.sql.name = org.apache.spark.sql
+    logger.spark.sql.level = info
+
+    logger.spark.executor.name = org.apache.spark.executor
+    logger.spark.executor.level = info
+
+    logger.spark.driver.name = org.apache.spark.driver
+    logger.spark.driver.level = info
+
+    # Application specific logger
+    logger.app.name = com.epay.operations
+    logger.app.level = info
+    logger.app.additivity = false
+    logger.app.appenderRef.console.ref = console
+    logger.app.appenderRef.rolling.ref = rolling
+
+  metrics.properties: |
+    # Spark Metrics Configuration
+    *.sink.console.class=org.apache.spark.metrics.sink.ConsoleSink
+    *.sink.console.period=10
+    *.sink.console.unit=seconds
+
+    # JVM metrics
+    *.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+
+    # Driver metrics
+    driver.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+
+    # Executor metrics
+    executor.source.jvm.class=org.apache.spark.metrics.source.JvmSource
+
+    # Application metrics
+    application.source.spark.class=org.apache.spark.metrics.source.SparkSource
+
+  driver-pod-template.yaml: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      labels:
+        spark-role: driver
+        app: ops-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001580000
+        fsGroup: 1001580000
+      containers:
+      - name: spark-kubernetes-driver
+        env:
+        - name: SPARK_DRIVER_OPTS
+          value: "-Dlog4j.configuration=file:///opt/spark/conf/log4j2.properties"
+
+  executor-pod-template.yaml: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      labels:
+        spark-role: executor
+        app: ops-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001580000
+        fsGroup: 1001580000
+      containers:
+      - name: spark-kubernetes-executor
+        env:
+        - name: SPARK_EXECUTOR_OPTS
+          value: "-Dlog4j.configuration=file:///opt/spark/conf/log4j2.properties"
