@@ -1,0 +1,53 @@
+# Unified SparkApplication Configuration
+# Works for both Kubernetes and OpenShift
+# OpenShift-specific parts are marked with comments
+
+apiVersion: spark.apache.org/v1beta1
+kind: SparkApplication
+metadata:
+  name: ops-service
+  namespace: dev-spark
+  labels:
+    app: ops-service
+    version: "01082025"
+spec:
+  type: Java
+  mainClass: "org.example.CsvComparison"
+  mainApplicationFile: "local:///opt/spark/jars/SparkDemo-0.1.jar"
+  sparkConf:
+    # Standard Spark configuration (works for both platforms)
+    spark.dynamicAllocation.enabled: "true"
+    spark.dynamicAllocation.shuffleTracking.enabled: "true"
+    spark.dynamicAllocation.maxExecutors: "2"
+    spark.kubernetes.authenticate.driver.serviceAccountName: "spark-sa"
+    spark.kubernetes.driver.serviceAccount: "spark-sa"
+    spark.kubernetes.executor.serviceAccount: "spark-sa"
+    spark.kubernetes.container.image: "registry.dev.sbiepay.sbi:8443/spark/spark:01082025v4"
+    spark.eventLog.enabled: "true"
+    spark.eventLog.dir: "file:///opt/spark/events"
+    spark.serializer: "org.apache.spark.serializer.KryoSerializer"
+    spark.sql.adaptive.enabled: "true"
+    spark.sql.adaptive.coalescePartitions.enabled: "true"
+    # Resource configuration (recommended for both platforms)
+    spark.driver.memory: "512m"
+    spark.driver.cores: "1"
+    spark.executor.memory: "512m"
+    spark.executor.cores: "1"
+
+    # OpenShift-specific settings
+    # These settings are only needed for OpenShift deployments
+    # For Kubernetes-only deployments, you can comment out these lines
+    spark.kubernetes.container.image.pullPolicy: "Always"
+    spark.kubernetes.container.image.pullSecrets: "spark-image-pull-secret"
+    spark.kubernetes.authenticate.executor.serviceAccountName: "spark-sa"
+
+    # OpenShift security settings (optional for Kubernetes)
+    # These are OpenShift-specific and can be commented out for Kubernetes
+    # spark.kubernetes.driver.podTemplateFile: "/opt/spark/conf/driver-pod-template.yaml"
+    # spark.kubernetes.executor.podTemplateFile: "/opt/spark/conf/executor-pod-template.yaml"
+
+  applicationTolerations:
+    resourceRetainPolicy: OnFailure
+
+  runtimeVersions:
+    sparkVersion: "4.0.0"
